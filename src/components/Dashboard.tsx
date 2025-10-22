@@ -42,7 +42,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
     fetchData();
   }, [fetchData]);
 
-  const handleAddTransaction = async (transaction: { item: string; cost: number; date: string }) => {
+  const handleAddTransaction = async (transactionsToAdd: { item: string; cost: number; date: string }[] | { item: string; cost: number; date: string }) => {
     setShowAddForm(false);
     setLoading(true);
     if (!accessToken) {
@@ -50,7 +50,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
       setLoading(false);
       return;
     }
-    const values = [[transaction.item, transaction.cost, transaction.date]];
+
+    const txs = Array.isArray(transactionsToAdd) ? transactionsToAdd : [transactionsToAdd];
+    const values = txs.map(t => [t.item, t.cost, t.date]);
     const result = await writeSheet(spreadsheetId, values, accessToken);
     if (result) {
       fetchData(); // Refresh data after adding
@@ -109,13 +111,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
           </tr>
         </thead>
         <tbody>
-          {transactions.slice(0, 10).map((tr, index) => (
-            <tr key={index}>
-              <td>{tr.item}</td>
-              <td>${tr.cost.toFixed(2)}</td>
-              <td>{tr.date}</td>
-            </tr>
-          ))}
+          {transactions.slice(0, 10).map((tr, index) => {
+            const isMaxDate = tr.date === metrics.currentMonth.maxDate;
+            return (
+              <tr key={index} className={isMaxDate ? 'table-warning' : ''}>
+                <td>{tr.item}</td>
+                <td>${tr.cost.toFixed(2)}</td>
+                <td>{tr.date}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
