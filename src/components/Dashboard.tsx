@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { writeSheet } from '../api/googleSheets';
+import React, { useState, useEffect } from 'react';
+import { readSheet, writeSheet } from '../api/googleSheets';
 import { Transaction, calculateMetrics } from '../services/analytics';
 import AddTransactionForm from './AddTransactionForm';
 
@@ -7,31 +7,59 @@ interface DashboardProps {
   onSignOut: () => void;
   spreadsheetId: string;
   accessToken: string;
-  transactions: Transaction[];
-  loading: boolean;
-  onRefresh: () => Promise<void>;
+  transactions?: Transaction[];
+  loading?: boolean;
+  onRefresh?: () => Promise<void>;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessToken, transactions, loading, onRefresh }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessToken, transactions: txFromParent, loading: loadingFromParent, onRefresh: onRefreshFromParent }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>(txFromParent || []);
+  const [loading, setLoading] = useState<boolean>(loadingFromParent ?? !txFromParent);
 
   const handleAddTransaction = async (transactionsToAdd: { item: string; cost: number; date: string }[] | { item: string; cost: number; date: string }) => {
     setShowAddForm(false);
+    const txs = Array.isArray(transactionsToAdd) ? transactionsToAdd : [transactionsToAdd];
+    const values = txs.map(t => [t.item, t.cost, t.date]);
     if (!accessToken) {
       setError('Access token not found.');
       return;
     }
-
-    const txs = Array.isArray(transactionsToAdd) ? transactionsToAdd : [transactionsToAdd];
-    const values = txs.map(t => [t.item, t.cost, t.date]);
     const result = await writeSheet(spreadsheetId, values, accessToken);
     if (result) {
-      await onRefresh(); // ask parent to refresh data
+      if (onRefreshFromParent) {
+        await onRefreshFromParent();
+      } else {
+        // fallback: fetch data locally
+        const data = await readSheet(spreadsheetId, accessToken);
+        if (data) {
+          const formattedData: Transaction[] = data.slice(1).map((row: any[]) => ({ item: row[0], cost: parseFloat(row[1]), date: row[2] }));
+          setTransactions(formattedData);
+        }
+      }
     } else {
       setError('Failed to add transaction.');
     }
   };
+
+  useEffect(() => {
+    // If parent didn't provide transactions, fetch locally on mount
+    const fetchLocal = async () => {
+      if (txFromParent) return;
+      if (!accessToken) return;
+      setLoading(true);
+      const data = await readSheet(spreadsheetId, accessToken);
+      if (data) {
+        const formattedData: Transaction[] = data.slice(1).map((row: any[]) => ({ item: row[0], cost: parseFloat(row[1]), date: row[2] }));
+        setTransactions(formattedData);
+      }
+      setLoading(false);
+    };
+
+    fetchLocal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const metrics = calculateMetrics(transactions);
 
@@ -97,8 +125,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
 
       {/* Add Transaction FAB */}
       <button 
-        className="btn btn-primary btn-lg rounded-circle position-fixed"
-        style={{ right: '2rem', bottom: '2rem', zIndex: 1050 }}
+        className="btn btn-primary btn-lg rounded-circle fab"
         onClick={() => setShowAddForm(true)}
       >
         +
