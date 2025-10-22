@@ -44,3 +44,35 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+## Deploying to Vercel
+
+This project builds with Create React App and can be deployed to Vercel easily.
+
+Quick steps (Dashboard)
+- Push your repository to GitHub/GitLab/Bitbucket.
+- Go to https://vercel.com, sign in, and click "New Project" -> Import your repo.
+- Vercel usually detects Create React App and sets the build command to `npm run build` and the output directory to `build`.
+
+Managing environment variables (Client-side)
+- In Vercel, go to your Project -> Settings -> Environment Variables.
+- Add a variable named `REACT_APP_GOOGLE_CLIENT_ID` with your Google OAuth client ID. Set it for the environments you need (Preview / Production).
+- After adding or changing env vars, trigger a new deployment (Vercel will redeploy automatically when you push or you can trigger a redeploy from the dashboard).
+
+Managing environment variables (CLI)
+- Install the Vercel CLI: `npm i -g vercel`
+- Login: `vercel login`
+- Link a project (from your repo directory): `vercel link`
+- Add an environment variable:
+
+	vercel env add REACT_APP_GOOGLE_CLIENT_ID production
+
+	The CLI will prompt you for the value and the target environment (development, preview, production).
+
+Google OAuth production setup
+- In the Google Cloud Console (APIs & Services -> Credentials), add your Vercel deployment URL to the "Authorized JavaScript origins" and any redirect URIs used in your OAuth flow (for example: `https://your-project-name.vercel.app`).
+
+Notes
+- Because Create React App inlines `REACT_APP_*` env vars at build time, make sure the variable is set in Vercel before the build runs. If you add it after a deployment, trigger a redeploy.
+- Do not commit your `.env` file to source control; use Vercel Dashboard or CLI to manage production secrets.
+# expense_tracker
