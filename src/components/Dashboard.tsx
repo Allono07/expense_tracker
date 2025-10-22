@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { readSheet, writeSheet } from '../api/googleSheets';
+import React, { useState } from 'react';
+import { writeSheet } from '../api/googleSheets';
 import { Transaction, calculateMetrics } from '../services/analytics';
 import AddTransactionForm from './AddTransactionForm';
 
@@ -7,47 +7,19 @@ interface DashboardProps {
   onSignOut: () => void;
   spreadsheetId: string;
   accessToken: string;
+  transactions: Transaction[];
+  loading: boolean;
+  onRefresh: () => Promise<void>;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessToken }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessToken, transactions, loading, onRefresh }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    if (!accessToken) {
-      setError('Access token not found.');
-      setLoading(false);
-      return;
-    }
-    const data = await readSheet(spreadsheetId, accessToken);
-    if (data) {
-      // Assuming the first row is headers
-      const formattedData: Transaction[] = data.slice(1).map((row: any[]) => ({
-        item: row[0],
-        cost: parseFloat(row[1]),
-        date: row[2],
-      }));
-      setTransactions(formattedData);
-    } else {
-      setError('Could not fetch data. Check your Sheet ID and permissions.');
-    }
-    setLoading(false);
-  }, [spreadsheetId, accessToken]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   const handleAddTransaction = async (transactionsToAdd: { item: string; cost: number; date: string }[] | { item: string; cost: number; date: string }) => {
     setShowAddForm(false);
-    setLoading(true);
     if (!accessToken) {
       setError('Access token not found.');
-      setLoading(false);
       return;
     }
 
@@ -55,10 +27,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
     const values = txs.map(t => [t.item, t.cost, t.date]);
     const result = await writeSheet(spreadsheetId, values, accessToken);
     if (result) {
-      fetchData(); // Refresh data after adding
+      await onRefresh(); // ask parent to refresh data
     } else {
       setError('Failed to add transaction.');
-      setLoading(false);
     }
   };
 

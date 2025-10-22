@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import ConnectionScreen from './components/ConnectionScreen';
-import Dashboard from './components/Dashboard';
+import MainApp from './MainApp';
 import './App.css';
 
 // Read Google OAuth client ID from environment. For Create React App, env vars must start with REACT_APP_
@@ -50,7 +50,7 @@ function App() {
   return (
     <div>
       {accessToken && spreadsheetId ? (
-        <Dashboard onSignOut={handleSignOut} spreadsheetId={spreadsheetId} accessToken={accessToken} />
+        <MainApp onSignOut={handleSignOut} spreadsheetId={spreadsheetId} accessToken={accessToken} />
       ) : (
         <ConnectionScreen onConnect={handleConnect} />
       )}
