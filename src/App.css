@@ -36,3 +36,57 @@
     transform: rotate(360deg);
   }
 }
+
+:root {
+  --bg: #ffffff; /* dark navy */
+  --card: #0b1220;
+  --muted: #94a3b8;
+  --accent: #7c3aed; /* purple */
+  --accent-2: #06b6d4; /* cyan */
+  --success: #10b981;
+  --danger: #ef4444;
+  --glass: rgba(255,255,255,0.04);
+}
+
+body {
+  background: linear-gradient(180deg, var(--bg) 0%, #071021 100%);
+  color: #e6eef8;
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: none;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+  background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  z-index: 2000;
+}
+
+.bottom-nav .btn {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.bottom-nav .text-primary {
+  color: var(--accent) !important;
+}
+
+/* Heatmap color scales */
+.color-empty { fill: #0b1220; }
+.color-scale-1 { fill: #c7f9ff; }
+.color-scale-2 { fill: #7ce7f0; }
+.color-scale-3 { fill: #39c3d8; }
+.color-scale-4 { fill: var(--accent-2); }
+
+.heatmap-legend { font-size: 0.85rem; color: var(--muted); }
+
+.table-warning { background: rgba(124,58,237,0.08) !important; }
+
