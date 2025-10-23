@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import ConnectionScreen from './components/ConnectionScreen';
 import Dashboard from './components/Dashboard';
 import './App.css';
 
 // Read Google OAuth client ID from environment. For Create React App, env vars must start with REACT_APP_
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const HARDCODED_SHEET_ID = '1xNI8jwWQq5MDhKtwSL4P1PjL5uwMrqCDh7kKxKKDu1s'; // hardcoded sheet ID
 
 function App() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [spreadsheetId, setSpreadsheetId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedSheetId = localStorage.getItem('spreadsheetId');
-    const storedToken = localStorage.getItem('accessToken');
-    if (storedSheetId && storedToken) {
-      setSpreadsheetId(storedSheetId);
-      setAccessToken(storedToken);
-    }
-  }, []);
+  const spreadsheetId = HARDCODED_SHEET_ID;
 
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
@@ -30,18 +21,25 @@ function App() {
       console.log('Login Failed');
     },
     scope: SCOPES,
+    flow: 'implicit', // use implicit flow for auto-redirect
   });
 
-  const handleConnect = (id: string) => {
-    setSpreadsheetId(id);
-    localStorage.setItem('spreadsheetId', id);
-    login();
-  };
+  useEffect(() => {
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
+      setAccessToken(storedToken);
+    } else {
+      // auto-login if no token stored (first time or token cleared)
+      // delay slightly to ensure GoogleOAuthProvider is ready
+      setTimeout(() => {
+        login();
+      }, 500);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [login]);
 
   const handleSignOut = () => {
-    localStorage.removeItem('spreadsheetId');
     localStorage.removeItem('accessToken');
-    setSpreadsheetId(null);
     setAccessToken(null);
     // It's good practice to also revoke the token if possible, 
     // but for this flow, just clearing it locally is the main step.
@@ -52,7 +50,9 @@ function App() {
       {accessToken && spreadsheetId ? (
         <Dashboard onSignOut={handleSignOut} spreadsheetId={spreadsheetId} accessToken={accessToken} />
       ) : (
-        <ConnectionScreen onConnect={handleConnect} />
+        <div style={{ padding: 20 }}>
+          <p>Authenticating with Google...</p>
+        </div>
       )}
     </div>
   );
