@@ -94,8 +94,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
 
       {/* Metrics Cards */}
       <div className="row mb-4">
+        {/* Today */}
+        <div className="col-md-4">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">Today</h5>
+              <p className="card-text">Total: ${metrics.today.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
         {/* Current Month */}
-        <div className="col-md-6">
+        <div className="col-md-4">
           <div className="card">
             <div className="card-body">
               <h5 className="card-title">Current Month</h5>
@@ -106,7 +115,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
           </div>
         </div>
         {/* Previous Month */}
-        <div className="col-md-6">
+        <div className="col-md-4">
           <div className="card">
             <div className="card-body">
               <h5 className="card-title">Previous Month</h5>
@@ -119,7 +128,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
       </div>
 
       {/* Recent Transactions */}
-      <h2 className="mb-3">Recent Transactions</h2>
+      <h2 className="mb-3">All Transactions</h2>
       <table className="table">
         <thead>
           <tr>
@@ -129,7 +138,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
           </tr>
         </thead>
         <tbody>
-          {transactions.slice(0, 10).map((tr, index) => {
+          {transactions.map((tr, index) => {
             const isMaxDate = tr.date === metrics.currentMonth.maxDate;
             return (
               <tr key={index} className={isMaxDate ? 'table-warning' : ''}>

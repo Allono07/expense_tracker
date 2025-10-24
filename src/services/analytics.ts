@@ -8,10 +8,17 @@ export const calculateMetrics = (transactions: Transaction[]) => {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Start of today
 
   const currentMonthTransactions = transactions.filter(t => {
     const date = new Date(t.date);
     return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
+  });
+
+  const todayTransactions = transactions.filter(t => {
+    const date = new Date(t.date);
+    const tStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    return tStart.getTime() === today.getTime();
   });
 
   const previousMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -58,8 +65,11 @@ export const calculateMetrics = (transactions: Transaction[]) => {
     };
   };
 
+  const todayTotal = todayTransactions.reduce((sum, t) => sum + t.cost, 0);
+
   return {
     currentMonth: calculateMonthMetrics(currentMonthTransactions),
     previousMonth: calculateMonthMetrics(previousMonthTransactions),
+    today: todayTotal,
   };
 };
