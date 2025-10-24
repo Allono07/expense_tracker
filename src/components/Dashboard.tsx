@@ -10,9 +10,10 @@ interface DashboardProps {
   transactions?: Transaction[];
   loading?: boolean;
   onRefresh?: () => Promise<void>;
+  onTokenExpired?: () => void; // Callback when token expires
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessToken, transactions: txFromParent, loading: loadingFromParent, onRefresh: onRefreshFromParent }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessToken, transactions: txFromParent, loading: loadingFromParent, onRefresh: onRefreshFromParent, onTokenExpired }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>(txFromParent || []);
@@ -27,12 +28,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
       return;
     }
     const result = await writeSheet(spreadsheetId, values, accessToken);
+    // Check if token expired
+    if (result && result.error === 'token_expired') {
+      setError('Your login session expired. Please refresh and log in again.');
+      if (onTokenExpired) onTokenExpired();
+      return;
+    }
     if (result) {
       if (onRefreshFromParent) {
         await onRefreshFromParent();
       } else {
         // fallback: fetch data locally
         const data = await readSheet(spreadsheetId, accessToken);
+        if (data && data.error === 'token_expired') {
+          setError('Your login session expired. Please refresh and log in again.');
+          if (onTokenExpired) onTokenExpired();
+          return;
+        }
         if (data) {
           const formattedData: Transaction[] = data.slice(1).map((row: any[]) => ({ item: row[0], cost: parseFloat(row[1]), date: row[2] }));
           setTransactions(formattedData);
@@ -50,6 +62,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
       if (!accessToken) return;
       setLoading(true);
       const data = await readSheet(spreadsheetId, accessToken);
+      // Check if token expired
+      if (data && data.error === 'token_expired') {
+        setError('Your login session expired. Please refresh and log in again.');
+        if (onTokenExpired) onTokenExpired();
+        setLoading(false);
+        return;
+      }
       if (data) {
         const formattedData: Transaction[] = data.slice(1).map((row: any[]) => ({ item: row[0], cost: parseFloat(row[1]), date: row[2] }));
         setTransactions(formattedData);

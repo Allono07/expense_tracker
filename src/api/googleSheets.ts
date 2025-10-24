@@ -7,6 +7,11 @@ export const readSheet = async (spreadsheetId: string, accessToken: string) => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+    // Check for 401 Unauthorized (token expired)
+    if (response.status === 401) {
+      console.error('Access token expired (401)');
+      return { error: 'token_expired' };
+    }
     const data = await response.json();
     return data.values;
   } catch (err: any) {
@@ -27,6 +32,11 @@ export const writeSheet = async (spreadsheetId: string, values: any[][], accessT
         values: values,
       }),
     });
+    // Check for 401 Unauthorized (token expired)
+    if (response.status === 401) {
+      console.error('Access token expired (401)');
+      return { error: 'token_expired' };
+    }
     const data = await response.json();
     return data;
   } catch (err: any) {

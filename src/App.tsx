@@ -45,10 +45,20 @@ function App() {
     // but for this flow, just clearing it locally is the main step.
   };
 
+  const handleTokenExpired = () => {
+    // Token expired, clear it and prompt re-login
+    localStorage.removeItem('accessToken');
+    setAccessToken(null);
+    // Delay slightly to ensure state updates, then trigger login
+    setTimeout(() => {
+      login();
+    }, 300);
+  };
+
   return (
     <div>
       {accessToken && spreadsheetId ? (
-        <Dashboard onSignOut={handleSignOut} spreadsheetId={spreadsheetId} accessToken={accessToken} />
+        <Dashboard onSignOut={handleSignOut} spreadsheetId={spreadsheetId} accessToken={accessToken} onTokenExpired={handleTokenExpired} />
       ) : (
         <div style={{ padding: 20 }}>
           <p>Authenticating with Google...</p>
