@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import Dashboard from './components/Dashboard';
+import WeeklyBreakdown from './components/WeeklyBreakdown';
+import { Transaction } from './services/analytics';
 import './App.css';
 
 // Read Google OAuth client ID from environment. For Create React App, env vars must start with REACT_APP_
@@ -10,6 +12,8 @@ const HARDCODED_SHEET_ID = '1xNI8jwWQq5MDhKtwSL4P1PjL5uwMrqCDh7kKxKKDu1s'; // ha
 
 function App() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'weekly'>('dashboard');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const spreadsheetId = HARDCODED_SHEET_ID;
 
   const login = useGoogleLogin({
@@ -58,7 +62,23 @@ function App() {
   return (
     <div>
       {accessToken && spreadsheetId ? (
-        <Dashboard onSignOut={handleSignOut} spreadsheetId={spreadsheetId} accessToken={accessToken} onTokenExpired={handleTokenExpired} />
+        currentPage === 'dashboard' ? (
+          <Dashboard 
+            onSignOut={handleSignOut} 
+            spreadsheetId={spreadsheetId} 
+            accessToken={accessToken} 
+            onTokenExpired={handleTokenExpired}
+            onViewWeekly={(txs) => {
+              setTransactions(txs);
+              setCurrentPage('weekly');
+            }}
+          />
+        ) : (
+          <WeeklyBreakdown 
+            transactions={transactions}
+            onBack={() => setCurrentPage('dashboard')}
+          />
+        )
       ) : (
         <div style={{ padding: 20 }}>
           <p>Authenticating with Google...</p>

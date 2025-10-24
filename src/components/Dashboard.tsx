@@ -11,9 +11,10 @@ interface DashboardProps {
   loading?: boolean;
   onRefresh?: () => Promise<void>;
   onTokenExpired?: () => void; // Callback when token expires
+  onViewWeekly?: (transactions: Transaction[]) => void; // Callback to view weekly breakdown
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessToken, transactions: txFromParent, loading: loadingFromParent, onRefresh: onRefreshFromParent, onTokenExpired }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessToken, transactions: txFromParent, loading: loadingFromParent, onRefresh: onRefreshFromParent, onTokenExpired, onViewWeekly }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>(txFromParent || []);
@@ -95,7 +96,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
       {/* Metrics Cards */}
       <div className="row mb-4">
         {/* Today */}
-        <div className="col-md-4">
+        <div className="col-md-6 col-lg-4">
           <div className="card">
             <div className="card-body">
               <h5 className="card-title">Today</h5>
@@ -104,30 +105,40 @@ const Dashboard: React.FC<DashboardProps> = ({ onSignOut, spreadsheetId, accessT
           </div>
         </div>
         {/* Current Month */}
-        <div className="col-md-4">
+        <div className="col-md-6 col-lg-4">
           <div className="card">
             <div className="card-body">
               <h5 className="card-title">Current Month</h5>
               <p className="card-text">Total: ${metrics.currentMonth.total.toFixed(2)}</p>
-              <p className="card-text">Max Spend: {metrics.currentMonth.maxItem} (${metrics.currentMonth.maxItemCost.toFixed(2)})</p>
+              <p className="card-text">Max Spend: {metrics.currentMonth.maxItem}</p>
               <p className="card-text">Max Date: {metrics.currentMonth.maxDate}</p>
             </div>
           </div>
         </div>
         {/* Previous Month */}
-        <div className="col-md-4">
+        <div className="col-md-6 col-lg-4">
           <div className="card">
             <div className="card-body">
               <h5 className="card-title">Previous Month</h5>
               <p className="card-text">Total: ${metrics.previousMonth.total.toFixed(2)}</p>
-              <p className="card-text">Max Spend: {metrics.previousMonth.maxItem} (${metrics.previousMonth.maxItemCost.toFixed(2)})</p>
+              <p className="card-text">Max Spend: {metrics.previousMonth.maxItem}</p>
               <p className="card-text">Max Date: {metrics.previousMonth.maxDate}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Transactions */}
+      {/* View Weekly Breakdown Button */}
+      <div className="mb-4">
+        <button 
+          className="btn btn-info"
+          onClick={() => onViewWeekly && onViewWeekly(transactions)}
+        >
+          View 7-Day Breakdown
+        </button>
+      </div>
+
+      {/* All Transactions */}
       <h2 className="mb-3">All Transactions</h2>
       <table className="table">
         <thead>
